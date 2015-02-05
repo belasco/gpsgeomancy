@@ -25,10 +25,10 @@ azimuths (N=0, E=90, S=180, W=270) and then their signal to noise
 (SNR) and then if necessary their elevation (closer to 45 wins?)
 
 >          West     North    East    South
->    prn    **        *      **       *
->    ele    **        *      **       *
->    azi    *         *      *        **
->    snr    *         **     **       **
+>     prn    **        *      **       *
+>     ele    **        *      **       *
+>     azi    *         *      *        **
+>     snr    *         **     **       **
 
 Two stars could be even numbers, one star odd.
 
