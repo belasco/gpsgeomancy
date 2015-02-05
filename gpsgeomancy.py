@@ -45,6 +45,20 @@ can be on ttyACM0 and they are all 115200 baud.
 
 Copyright 2015 Daniel Belasco Rogers danbelasco@yahoo.co.uk
 
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or (at
+your option) any later version.
+
+This program is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+02110-1301 USA.
 """
 
 import sys
@@ -174,22 +188,11 @@ def formatgsvlist(gsvlist):
     return formattedgsv
 
 
-def sortdict(Dict):
-
-    keys = Dict.keys()
-    keys.sort()
-    sortedList = [Dict[key] for key in keys]
-    # List = []
-    # for item in sortedList:
-    #     for element in item:
-    #         List.append(element)
-    return sortedList
-
-
 def makesatdict(gsvlist):
-    '''
-    makes a dictionary with prn as a key
-    '''
+    """
+    makes a dictionary with prn as a key and values as a list e.g.
+    prn:[ele, azi, snr]
+    """
     satdict = {}
 
     for item in range(0, len(gsvlist), 4):
@@ -201,7 +204,7 @@ def makesatdict(gsvlist):
 
 
 def directionclassify(satdict):
-
+    """Appends compass direction onto end of list for each satellite"""
     for prn in satdict:
         azi = satdict[prn][1]
         if azi > 315 or azi < 45:
