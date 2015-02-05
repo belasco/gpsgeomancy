@@ -10,13 +10,13 @@ Geomantic divination information from Stephen Skinner "Terrestrial
 Astronomy - Divination by Geomancy" (the asterisks are the
 'reading' - they can be two dots or one):
 
->       Earth    Water    Air     Fire
->        IV       III     II       I
-> head   **        *      **       *
-> neck   **        *      **       *
-> body   *         *      *        **
-> feet   *         **     **       **
->       West     North    East    South
+>          Earth    Water    Air     Fire
+>           IV       III     II       I
+>    head   **        *      **       *
+>    neck   **        *      **       *
+>    body   *         *      *        **
+>    feet   *         **     **       **
+>          West     North    East    South
 
 Suggested correspondence between these categories and the GPS data
 from the NMEA sentences. The satellites corresponding to the
@@ -24,11 +24,11 @@ cardinal points / elements are chosen by their closeness to the
 azimuths (N=0, E=90, S=180, W=270) and then their signal to noise
 (SNR) and then if necessary their elevation (closer to 45 wins?)
 
->       West     North    East    South
-> prn    **        *      **       *
-> ele    **        *      **       *
-> azi    *         *      *        **
-> snr    *         **     **       **
+>          West     North    East    South
+>    prn    **        *      **       *
+>    ele    **        *      **       *
+>    azi    *         *      *        **
+>    snr    *         **     **       **
 
 Two stars could be even numbers, one star odd.
 
