@@ -37,3 +37,9 @@ this with the -p (--port) option. The default baud rate for the GPS
 is 4800 but you can change this with the -b (--baud) option. Garmin
 etrex and similar tend to be on ttyUSB0 at 4800 but the dataloggers
 can be on ttyACM0 and they are all 115200 baud.
+
+Script is in an unfinished state at the moment. Currently the GSV
+sentences are grabbed, information (elevation, azimuth and
+signal-to-noise) is stored in a dictionary under prn (pseudo random
+number) as keys and lastly, compass directions are appended to the
+information list.
