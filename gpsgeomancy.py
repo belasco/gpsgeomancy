@@ -84,6 +84,11 @@ def parse_arguments():
 
 
 def connectgps(port, baud):
+    """
+    Connects to a GPS at address passed by port at the rate defined
+    by baud and handles simple exception
+
+    """
     try:
         gps = serial.Serial(port, baud, timeout=1)
     except serial.SerialException:
@@ -97,10 +102,10 @@ is the GPS plugged in and turned on?
 
 def checksum(data):
     """
-    checksum(data) -> str Internal method which calculates
-    the XOR checksum over the sentence (as a string, not including
-    the leading '$' or the final 3 characters, the ',' and
-    checksum itself).
+    checksum(data) -> str Calculates the XOR checksum over the
+    sentence (as a string, not including the leading '$' or the
+    final 3 characters, the ',' and checksum itself).
+
     """
     checksum = 0
     for character in data:
@@ -111,8 +116,9 @@ def checksum(data):
 
 def formatline(line):
     """
-    preformatting on all NMEA sentences. Returns a list of values
-    without checksum and without carriage returns
+    Preformats NMEA sentences. Performs checksum to make sure the
+    sentence has been recieved as it should. Returns a list of
+    values without checksum and without carriage returns
     """
     line.strip()
 
@@ -143,13 +149,16 @@ def formatline(line):
 
 def parseGSV(line, gps):
     """
+    The first part of decoding the GSV sentences. This function
+    makes sure that all GSV sentences are fetched in one list of
+    lists.
 
-    only interested in gsv sentences, otherwise just return none to
-    calling function
-
+    GSV sentences:
     $GPGSV,3,1,12,01,80,283,20,32,77,227,18,11,72,175,19,20,42,247,25*79
     $GPGSV,3,2,12,14,35,055,15,19,23,174,28,17,19,318,26,28,15,281,15*7C
     $GPGSV,3,3,12,22,11,068,17,23,05,194,,31,04,113,,36,,,*4A
+
+    Output:
 
     """
     gsvlist = [line]
@@ -204,7 +213,10 @@ def makesatdict(gsvlist):
 
 
 def directionclassify(satdict):
-    """Appends compass direction onto end of list for each satellite"""
+    """
+    Appends compass direction onto end of list for each satellite
+
+    """
     for prn in satdict:
         azi = satdict[prn][1]
         if azi > 315 or azi < 45:
@@ -240,8 +252,8 @@ def getsatellites(gps):
                 gsvlist = parseGSV(line, gps)
                 gsvlist = formatgsvlist(gsvlist)
 
-            else:
-                continue
+            # else:
+            #     continue
 
             return gsvlist
 
@@ -264,11 +276,8 @@ def main():
 
     # sort and filter satellites
     satdict = makesatdict(satellitepositions)
-
     satdict = directionclassify(satdict)
     pprint(satdict)
-
-
 
     # Prepare 'mothers'
 
