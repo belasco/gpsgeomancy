@@ -29,7 +29,7 @@ cardinal points / elements are chosen by their closeness to the
 azimuths (N=0, E=90, S=180, W=270) and then their signal to noise
 (SNR) and then if necessary their elevation (closer to 45 wins?)
 
-      West     North    East    South
+     West     North    East    South
 prn    **        *      **       *
 ele    **        *      **       *
 azi    *         *      *        **
@@ -387,6 +387,69 @@ user interrupt, shutting down"""
             sys.exit()
 
 
+def inttodot(integer):
+    """
+    Convert an integer to divination dots, two dots if the integer
+    is even, one if odd, two if zero
+
+    Takes an integer argument, returns a string of two dotchars or
+    one
+
+    """
+    dotchar = "*"
+    if integer % 2 == 0:
+        dot = dotchar * 2
+    else:
+        dot = dotchar + " "  # The addition of a space helps the
+                             # final diagram line up
+
+    return dot
+
+
+def preparemothers(chosenfour):
+    """Turn the data from the four chosen satellites into the mothers
+    diagram.
+
+     West     North    East    South
+prn    **        *      **       *
+ele    **        *      **       *
+azi    *         *      *        **
+snr    *         **     **       **
+
+    Earth    Water    Air     Fire
+       IV       III     II       I
+head   **        *      **       *
+neck   **        *      **       *
+body   *         *      *        **
+feet   *         **     **       **
+      West     North    East    South
+
+    """
+    spacer = "      "
+    EOL = "\n"
+    motherstring = """       Earth    Water    Air     Fire
+        IV       III     II       I""" + EOL
+
+    head = "head" + spacer
+    neck = "neck" + spacer
+    body = "body" + spacer
+    feet = "feet" + spacer
+
+    for d in ["West", "North", "East", "South"]:
+        head += inttodot(chosenfour[d][0]) + spacer
+        neck += inttodot(chosenfour[d][1]) + spacer
+        body += inttodot(chosenfour[d][2]) + spacer
+        feet += inttodot(chosenfour[d][3]) + spacer
+
+    motherstring += head + EOL
+    motherstring += neck + EOL
+    motherstring += body + EOL
+    motherstring += feet + EOL
+    motherstring += "       West     North    East    South"
+
+    return motherstring
+
+
 def main():
     """
     """
@@ -418,10 +481,12 @@ def main():
         pprint(chosenfour)
 
     # Prepare 'mothers'
-
+    motherstring = preparemothers(chosenfour)
 
     # Format and print 'mothers' to screen
-
+    print
+    print motherstring
+    print
 
 if __name__ == '__main__':
     sys.exit(main())
