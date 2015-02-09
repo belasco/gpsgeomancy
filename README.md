@@ -1,6 +1,16 @@
 # gpsgeomancy
 An attempt to help Martin Howse with his GPS geomancy idea.
 
+    usage: gpsgeomancy.py [-h] [-v] [-b BAUD] [-p PORT]
+
+    Geomancy with GPS satellite positions
+
+    optional arguments:
+      -h, --help            show this help message and exit
+      -v, --verbose         Print verbose outputs to screen (intermediate selections etc.)
+      -b BAUD, --baud BAUD  Set the baud rate for the GPS. Default is 4800
+      -p PORT, --port PORT  Address of the GPS. Default is /dev/ttyUSB0
+
 Take an attached GPS (serial) and get the satellite positions and
 data from the NMEA GSV sentences. Find four suitable data sets
 (satellites) that correspond to the cardinal directions (North,
@@ -38,8 +48,13 @@ is 4800 but you can change this with the -b (--baud) option. Garmin
 etrex and similar tend to be on ttyUSB0 at 4800 but the dataloggers
 can be on ttyACM0 and they are all 115200 baud.
 
-Script is in an unfinished state at the moment. Currently the GSV
-sentences are grabbed, information (elevation, azimuth and
-signal-to-noise) is stored in a dictionary under prn (pseudo random
-number) as keys and lastly, compass directions are appended to the
-information list.
+If you run the script with the -v option, you get to preview some
+of the intermediate decisions the script is making.
+
+BUG On my system, /dev already has a ttyUSB0 entry even when
+there's nothing plugged in. If you leave the script polling the
+default port address, nothing happens - no timeout, no exception,
+it just hangs.
+
+Not sure how to catch this and only hope that other users of this
+don't have a /dev/ttyUSB0 entry when nothing is plugged in.
