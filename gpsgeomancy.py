@@ -74,6 +74,10 @@ sudo apt-get install python-serial"""
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description='Geomancy with GPS satellite positions')
+    parser.add_argument('-v', '--verbose',
+                        help="Print verbose outputs to screen (intermediate selections etc.)",
+                        action='store_true',
+                        default=False)
     parser.add_argument('-b', '--baud',
                         help="Set the baud rate for the GPS. Default is 4800",
                         default=4800)
@@ -100,7 +104,7 @@ is the GPS plugged in and turned on?
     return gps
 
 
-def waitforfix(gps):
+def waitforfix(gps, verbose):
     """
     Examine the RMC sentence to see if the gps has a fix. This
     shows up as an 'A' in the second field after the header.
@@ -128,7 +132,7 @@ def waitforfix(gps):
             line = gps.readline()
             if line.startswith('$GPRMC'):
                 interval_count += 1
-                line = formatline(line)
+                line = formatline(line, verbose)
 
                 # formatline performs checksum and returns None if
                 # it fails
@@ -164,7 +168,7 @@ def checksum(data):
     return hex_checksum.upper()
 
 
-def formatline(line):
+def formatline(line, verbose):
     """
     Preformats NMEA sentences. Performs checksum to make sure the
     sentence has been recieved as it should. Returns a list of
@@ -183,10 +187,12 @@ def formatline(line):
         line = line[1:star]
         sum = checksum(line)
         if sum != check:
-            print "failed checksum"
+            if verbose:
+                print "failed checksum"
             return None
     else:
-        print "no checksum"
+        if verbose:
+            print "no checksum"
         return None
 
     # lose checksum now we've validated it
@@ -197,7 +203,7 @@ def formatline(line):
     return line
 
 
-def parseGSV(line, gps):
+def parseGSV(line, gps, verbose):
     """
     The first part of decoding the GSV sentences. This function
     makes sure that all GSV sentences are fetched in one list of
@@ -213,13 +219,14 @@ def parseGSV(line, gps):
     """
     gsvlist = [line]
     num_of_sentences = int(line[1])
-    print "sentences: %d\tsatellites: %s" % (num_of_sentences, line[3])
+    if verbose:
+        print "sentences: %d\tsatellites: %s" % (num_of_sentences, line[3])
 
     # number of GSV sentences vary. Fetch them all before
     # parsing the values
     for sentence in range(num_of_sentences - 1):
         line = gps.readline()
-        line = formatline(line)
+        line = formatline(line, verbose)
         gsvlist.append(line)
 
     return gsvlist
@@ -316,13 +323,6 @@ def selectsats(satdict):
 
     2. Signal to noise (highest number wins)
 
-    3. Lowest elevation (the justification for this is that high
-    elevations are not very directional i.e. a satellite directly
-    overhead is neither North, South, East nor West)
-
-    For debugging return satdict from directionclassify with
-    choices appended
-
     """
     chosenfour = {}
 
@@ -356,7 +356,7 @@ def selectsats(satdict):
     return chosenfour
 
 
-def getsatellites(gps):
+def getsatellites(gps, verbose):
     """
     main reiterating loop which reads the incoming nmea sentences
     from the gps, sends to parser and catches user interrupt:
@@ -367,14 +367,14 @@ def getsatellites(gps):
         try:
             line = gps.readline()
             if line.startswith('$GPGSV'):
-                line = formatline(line)
+                line = formatline(line, verbose)
 
                 # formatline performs checksum and returns None if
                 # it fails
                 if line is None:
-                    continue
+                    break
 
-                gsvlist = parseGSV(line, gps)
+                gsvlist = parseGSV(line, gps, verbose)
                 gsvlist = formatgsvlist(gsvlist)
 
                 return gsvlist
@@ -394,18 +394,28 @@ def main():
 
     gps = connectgps(args.port, args.baud)
 
-    waitforfix(gps)
+    waitforfix(gps, args.verbose)
 
-    satellitepositions = getsatellites(gps)
+    satellitepositions = getsatellites(gps, args.verbose)
 
     # classify satellites as compass directions
     satdict = makesatdict(satellitepositions)
     satdict = directionclassify(satdict)
-    pprint(satdict)
+    if args.verbose:
+        print
+        print "List of satellites found"
+        print "prn: [elevation, azimuth, signal to noise,\
+ direction, deviation from azi]"
+        pprint(satdict)
 
     # choose four satellites (see function for criteria)
     chosenfour = selectsats(satdict)
-    pprint(chosenfour)
+    if args.verbose:
+        print
+        print "List of chosen satellites"
+        print "direction: [prn, elevation, azimuth,\
+ signal to noise, deviation from azi]"
+        pprint(chosenfour)
 
     # Prepare 'mothers'
 
