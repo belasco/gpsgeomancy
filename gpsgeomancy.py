@@ -100,6 +100,56 @@ is the GPS plugged in and turned on?
     return gps
 
 
+def waitforfix(gps):
+    """
+    Examine the RMC sentence to see if the gps has a fix. This
+    shows up as an 'A' in the second field after the header.
+
+    $GPRMC,123519,A,4807.038,N,01131.000,E,022.4,084.4,230394,003.1,W*6A
+
+    Where:
+     RMC          Recommended Minimum sentence C
+     123519       Fix taken at 12:35:19 UTC
+     A            Status A=active or V=Void.
+     4807.038,N   Latitude 48 deg 07.038' N
+     01131.000,E  Longitude 11 deg 31.000' E
+     022.4        Speed over the ground in knots
+     084.4        Track angle in degrees True
+     230394       Date - 23rd of March 1994
+     003.1,W      Magnetic Variation
+     *6A          The checksum data, always begins with *
+
+    """
+    alert_interval = 8  # number of seconds to wait between
+                        # alerting the user there is no fix
+    interval_count = 0
+    while 1:
+        try:
+            line = gps.readline()
+            if line.startswith('$GPRMC'):
+                interval_count += 1
+                line = formatline(line)
+
+                # formatline performs checksum and returns None if
+                # it fails
+                if line is None:
+                    continue
+
+                if interval_count % alert_interval == 0:
+                    print "No GPS fix yet..."
+
+                if line[2] == 'A':
+                    print "Fix found"
+                    return
+
+        except KeyboardInterrupt:
+            # user sent ctrl-c to stop script
+            gps.close()
+            print """
+user interrupt, shutting down"""
+            sys.exit()
+
+
 def checksum(data):
     """
     checksum(data) -> str Calculates the XOR checksum over the
@@ -214,21 +264,61 @@ def makesatdict(gsvlist):
 
 def directionclassify(satdict):
     """
-    Appends compass direction onto end of list for each satellite
+    Appends compass direction onto end of list for each satellite.
+    Also appends a 'score' of how near the satellite is to the
+    cardinal point, which is the number of degrees away from the
+    due cardinal points (N=0, E=90, S=180, W=270)
 
     """
     for prn in satdict:
         azi = satdict[prn][1]
         if azi > 315 or azi < 45:
             satdict[prn].append("North")
+            if azi > 180:
+                azideviation = 360 - azi
+            else:
+                azideviation = azi
+            satdict[prn].append(azideviation)
         if azi > 45 and azi < 135:
             satdict[prn].append("East")
+            azideviation = abs(azi - 90)
+            satdict[prn].append(azideviation)
         if azi > 135 and azi < 225:
             satdict[prn].append("South")
+            azideviation = abs(azi - 180)
+            satdict[prn].append(azideviation)
         if azi > 225 and azi < 315:
             satdict[prn].append("West")
+            azideviation = abs(azi - 270)
+            satdict[prn].append(azideviation)
 
     return satdict
+
+
+def selectsats(satdict):
+    """Choose four satellites to form the reading based on the
+    following criteria, applied in order:
+
+    1. Closeness of satellite to the azimuth of the direction based
+    on azideviation score from directionclassify
+
+    2. Signal to noise (highest number wins)
+
+    3. Lowest elevation (the justification for this is that high
+    elevations are not very directional i.e. a satellite directly
+    overhead is neither North, South, East nor West)
+
+    For debugging return satdict from directionclassify with
+    choices appended
+
+    """
+    chosenfour = {}
+
+    for prn in satdict:
+
+
+    return chosenfour
+
 
 
 def getsatellites(gps):
@@ -252,10 +342,7 @@ def getsatellites(gps):
                 gsvlist = parseGSV(line, gps)
                 gsvlist = formatgsvlist(gsvlist)
 
-            # else:
-            #     continue
-
-            return gsvlist
+                return gsvlist
 
         except KeyboardInterrupt:
             # user sent ctrl-c to stop script
@@ -272,11 +359,16 @@ def main():
 
     gps = connectgps(args.port, args.baud)
 
+    waitforfix(gps)
+
     satellitepositions = getsatellites(gps)
 
-    # sort and filter satellites
+    # classify satellites as compass directions
     satdict = makesatdict(satellitepositions)
     satdict = directionclassify(satdict)
+
+    # choose four satellites (see function for criteria)
+    chosenfour = selectsats(satdict)
     pprint(satdict)
 
     # Prepare 'mothers'
