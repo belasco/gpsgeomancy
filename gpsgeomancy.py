@@ -269,6 +269,18 @@ def directionclassify(satdict):
     cardinal point, which is the number of degrees away from the
     due cardinal points (N=0, E=90, S=180, W=270)
 
+    Sample output
+    {2: [7, 132, 16, 'East', 42],
+     6: [19, 94, 27, 'East', 4],
+     12: [70, 259, 29, 'West', 11],
+     14: [28, 312, 31, 'West', 42],
+     15: [16, 187, 32, 'South', 7],
+     17: [24, 46, 25, 'East', 44],
+     22: [4, 280, 0, 'West', 10],
+     24: [77, 150, 50, 'South', 30],
+     25: [29, 255, 32, 'West', 15],
+     32: [4, 347, 0, 'North', 13],
+     39: [28, 165, 46, 'South', 15]}
     """
     for prn in satdict:
         azi = satdict[prn][1]
@@ -315,10 +327,33 @@ def selectsats(satdict):
     chosenfour = {}
 
     for prn in satdict:
-
+        direction = satdict[prn][3]
+        aziscore = satdict[prn][4]
+        if direction in chosenfour:  # if the key is already in the dict
+            # select by lowest azi deviation
+            if aziscore < chosenfour[direction][4]:
+                chosenfour[direction] = [prn,
+                                         satdict[prn][0],
+                                         satdict[prn][1],
+                                         satdict[prn][2],
+                                         aziscore]
+            # in the unlikely case that two satellites share the same azi
+            elif aziscore == chosenfour[direction][4]:
+                # select by highest snr
+                if satdict[prn][2] > chosenfour[prn][3]:
+                    chosenfour[direction] = [prn,
+                                             satdict[prn][0],
+                                             satdict[prn][1],
+                                             satdict[prn][2],
+                                             aziscore]
+        else:
+            chosenfour[direction] = [prn,
+                                     satdict[prn][0],
+                                     satdict[prn][1],
+                                     satdict[prn][2],
+                                     aziscore]
 
     return chosenfour
-
 
 
 def getsatellites(gps):
@@ -366,10 +401,11 @@ def main():
     # classify satellites as compass directions
     satdict = makesatdict(satellitepositions)
     satdict = directionclassify(satdict)
+    pprint(satdict)
 
     # choose four satellites (see function for criteria)
     chosenfour = selectsats(satdict)
-    pprint(satdict)
+    pprint(chosenfour)
 
     # Prepare 'mothers'
 
